@@ -181,7 +181,7 @@ export default function App() {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="absolute left-4 top-4 z-10 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            className="fixed left-4 top-4 z-[60] rounded-md p-1.5 bg-white text-zinc-500 shadow-md hover:bg-zinc-100 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 md:absolute md:bg-transparent md:shadow-none"
           >
             <PanelLeftOpen className="h-5 w-5" />
           </button>
