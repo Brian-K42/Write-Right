@@ -9,7 +9,7 @@ interface EvaluationStepProps {
 
 export function EvaluationStep({ evaluations, onSelectTopic }: EvaluationStepProps) {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [expandedInfo, setExpandedInfo] = useState<{ topic: string; type: string } | null>(null);
+  const [expandedInfo, setExpandedInfo] = useState<{ index: number; type: string } | null>(null);
 
   const handleSelect = (topic: string) => {
     setSelectedTopic(topic);
@@ -21,11 +21,11 @@ export function EvaluationStep({ evaluations, onSelectTopic }: EvaluationStepPro
     }
   };
 
-  const toggleInfo = (topic: string, type: string) => {
-    if (expandedInfo?.topic === topic && expandedInfo?.type === type) {
+  const toggleInfo = (index: number, type: string) => {
+    if (expandedInfo?.index === index && expandedInfo?.type === type) {
       setExpandedInfo(null);
     } else {
-      setExpandedInfo({ topic, type });
+      setExpandedInfo({ index, type });
     }
   };
 
@@ -41,9 +41,9 @@ export function EvaluationStep({ evaluations, onSelectTopic }: EvaluationStepPro
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {evaluations.map((evalData) => (
+        {evaluations.map((evalData, evalIndex) => (
           <div
-            key={evalData.topic}
+            key={evalIndex}
             className={`relative flex flex-col rounded-2xl border-2 p-6 transition-all ${
               selectedTopic === evalData.topic
                 ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-800/50'
@@ -86,7 +86,7 @@ export function EvaluationStep({ evaluations, onSelectTopic }: EvaluationStepPro
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleInfo(evalData.topic, subscore.key);
+                          toggleInfo(evalIndex, subscore.key);
                         }}
                         className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                       >
@@ -107,7 +107,7 @@ export function EvaluationStep({ evaluations, onSelectTopic }: EvaluationStepPro
                   </div>
 
                   {/* Expandable Blurb */}
-                  {expandedInfo?.topic === evalData.topic && expandedInfo?.type === subscore.key && (
+                  {expandedInfo?.index === evalIndex && expandedInfo?.type === subscore.key && (
                     <div className="mt-2 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-300">
                       {subscore.data.blurb}
                     </div>

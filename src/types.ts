@@ -18,10 +18,18 @@ export interface TopicEvaluation {
   fit: { score: number; blurb: string };
 }
 
+export interface FeedbackPoint {
+  section: string;
+  type: 'positive' | 'negative';
+  feedback: string;
+  suggestion?: string;
+}
+
 export interface Source {
   id: string;
   url: string;
   title: string;
   summary: string;
+  content: string;
   category: string;
 }

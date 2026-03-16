@@ -4,13 +4,28 @@ import { HomeStep } from './components/HomeStep';
 import { TopicsStep } from './components/TopicsStep';
 import { EvaluationStep } from './components/EvaluationStep';
 import { EditorStep } from './components/EditorStep';
-import { Project, TopicEvaluation, Source } from './types';
-import { evaluateTopics, generateInitialSources, summarizeSource, checkWriting } from './services/ai';
+import { ApiKeyScreen } from './components/ApiKeyScreen';
+import { Project, FeedbackPoint, Source } from './types';
+import {
+  initAI,
+  evaluateTopics,
+  generateInitialSources,
+  summarizeSource,
+  checkWriting,
+  evaluateTopicsMock,
+  generateInitialSourcesMock,
+  summarizeSourceMock,
+  checkWritingMock,
+} from './services/ai';
 import { PanelLeftOpen } from 'lucide-react';
 
 type Step = 'home' | 'topics' | 'evaluation' | 'editor';
 
 export default function App() {
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
+  const [ready, setReady] = useState(false);
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<Step>('home');
@@ -39,6 +54,34 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('writeright_projects', JSON.stringify(projects));
   }, [projects]);
+
+  const handleSubmitKey = (key: string) => {
+    initAI(key);
+    setApiKey(key);
+    setDemoMode(false);
+    setReady(true);
+  };
+
+  const handleSkip = () => {
+    setApiKey(null);
+    setDemoMode(true);
+    setReady(true);
+  };
+
+  // Select the right AI functions based on mode
+  const ai = demoMode
+    ? {
+        evaluateTopics: evaluateTopicsMock,
+        generateInitialSources: generateInitialSourcesMock,
+        summarizeSource: summarizeSourceMock,
+        checkWriting: checkWritingMock,
+      }
+    : {
+        evaluateTopics,
+        generateInitialSources,
+        summarizeSource,
+        checkWriting,
+      };
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -94,7 +137,7 @@ export default function App() {
     updateCurrentProject({ topics });
     setIsEvaluating(true);
     try {
-      const evaluations = await evaluateTopics(currentProject.specs, topics);
+      const evaluations = await ai.evaluateTopics(currentProject.specs, topics);
       updateCurrentProject({ evaluations });
       setCurrentStep('evaluation');
     } catch (error) {
@@ -109,12 +152,12 @@ export default function App() {
     if (!currentProject) return;
     updateCurrentProject({ selectedTopic: topic });
     setCurrentStep('editor');
-    
+
     // Generate initial sources in the background
     if (currentProject.sources.length === 0) {
       setIsGeneratingSources(true);
       try {
-        const initialSources = await generateInitialSources(topic, currentProject.specs);
+        const initialSources = await ai.generateInitialSources(topic, currentProject.specs);
         const sourcesWithIds = initialSources.map(s => ({ ...s, id: crypto.randomUUID() }));
         updateCurrentProject({ sources: sourcesWithIds });
       } catch (error) {
@@ -129,7 +172,7 @@ export default function App() {
     if (!currentProject || !currentProject.selectedTopic) return;
     setIsAddingSource(true);
     try {
-      const summary = await summarizeSource(url, currentProject.selectedTopic);
+      const summary = await ai.summarizeSource(url, currentProject.selectedTopic);
       const newSource: Source = {
         id: crypto.randomUUID(),
         url,
@@ -148,23 +191,28 @@ export default function App() {
     updateCurrentProject({ documentText: text });
   };
 
-  const handleCheckWriting = async () => {
-    if (!currentProject || !currentProject.selectedTopic) return '';
+  const handleCheckWriting = async (): Promise<FeedbackPoint[]> => {
+    if (!currentProject || !currentProject.selectedTopic) return [];
     setIsChecking(true);
     try {
-      const feedback = await checkWriting(
+      const feedback = await ai.checkWriting(
         currentProject.specs,
         currentProject.selectedTopic,
-        currentProject.documentText
+        currentProject.documentText,
+        currentProject.sources
       );
       return feedback;
     } catch (error) {
       console.error('Failed to check writing:', error);
-      return 'Failed to check writing. Please try again later.';
+      return [];
     } finally {
       setIsChecking(false);
     }
   };
+
+  if (!ready) {
+    return <ApiKeyScreen onSubmitKey={handleSubmitKey} onSkip={handleSkip} />;
+  }
 
   return (
     <div className="flex h-screen w-full bg-white font-sans text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
@@ -178,10 +226,10 @@ export default function App() {
       />
 
       <main className="relative flex flex-1 flex-col overflow-hidden">
-        {!isSidebarOpen && (
+        {!isSidebarOpen && currentStep !== 'editor' && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="fixed left-4 top-4 z-[60] rounded-md p-1.5 bg-white text-zinc-500 shadow-md hover:bg-zinc-100 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 md:absolute md:bg-transparent md:shadow-none"
+            className="absolute left-4 top-4 z-[60] rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
             <PanelLeftOpen className="h-5 w-5" />
           </button>
@@ -217,6 +265,8 @@ export default function App() {
               onCheckWriting={handleCheckWriting}
               isChecking={isChecking}
               isAddingSource={isAddingSource}
+              isSidebarOpen={isSidebarOpen}
+              onOpenSidebar={() => setIsSidebarOpen(true)}
             />
           )}
         </div>
