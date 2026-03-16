@@ -94,6 +94,14 @@ export default function App() {
     );
   };
 
+  const handleDeleteProject = (id: string) => {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    if (currentProjectId === id) {
+      setCurrentProjectId(null);
+      setCurrentStep('home');
+    }
+  };
+
   const handleNewProject = () => {
     setCurrentProjectId(null);
     setCurrentStep('home');
@@ -220,6 +228,7 @@ export default function App() {
         projects={projects}
         currentProjectId={currentProjectId}
         onSelectProject={handleSelectProject}
+        onDeleteProject={handleDeleteProject}
         onNewProject={handleNewProject}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
