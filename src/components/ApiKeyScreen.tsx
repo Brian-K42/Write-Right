@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyRound, ArrowRight, FlaskConical } from 'lucide-react';
+import { ArrowRight, FlaskConical } from 'lucide-react';
 
 interface ApiKeyScreenProps {
   onSubmitKey: (key: string) => void;
@@ -20,9 +20,11 @@ export function ApiKeyScreen({ onSubmitKey, onSkip }: ApiKeyScreenProps) {
     <div className="flex h-screen w-full items-center justify-center bg-white px-4 dark:bg-zinc-950">
       <div className="w-full max-w-md">
         <div className="mb-10 text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-            <KeyRound className="h-8 w-8 text-zinc-900 dark:text-zinc-100" />
-          </div>
+          <img
+            src="/Write_Right_Logo.png"
+            alt="WriteRight"
+            className="mx-auto mb-6 h-20 w-20"
+          />
           <h1 className="mb-2 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
             WriteRight
           </h1>
